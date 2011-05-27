@@ -40,13 +40,13 @@ class UnoConvWorker(BaseWorker):
         # we immediatly init our convertor
         self.converter = unoconv.Convertor()
 
-    def run_action(self, src, dest_fmt=None):
+    def run_action(self, src, dest_fmt=None, **kwargs):
         """Convert src to format dest_fmt, putting file at dest using
         unoconv
         """
         opts = []
         if dest_fmt:
-            opts.append('-f', dest_fmt)
+            opts.extend(('-f', dest_fmt))
         opts.append(src)
         # global options will be read from inside converter methods
         unoconv.op = unoconv.Options(opts)

@@ -1,13 +1,15 @@
-from document_chain.base import BaseWorker, controlled_worker
 import os
-import tempfile
 from StringIO import StringIO
-import time
 import shutil
+import tempfile
+import time
+
+from document_chain.base import BaseWorker, controlled_worker
+from document_chain.tests import make_dirs, log_all
+
 
 output = StringIO()
 log = StringIO()
-tmpdir = None  # we need to have a global tempdir to remove it after tests
 
 
 class NoRunWorker(BaseWorker):
@@ -41,23 +43,12 @@ class RaiserWorker(BaseWorker):
         raise Exception("I'm mean")
 
 
-def log_in_out(method, name):
-    """wrapper to log each time we enter or exit method"""
-    def fn(*args, **kwargs):
-        log.write('entered method %s with %r, %r\n' % (name, args, kwargs))
-        result = method(*args, **kwargs)
-        log.write('exit method %s with %r, %r\n' % (name, args, kwargs))
-        return result
-    return fn
+tmpdir = None  # we need to have a global var to remove it after tests
 
 
-def log_all(obj):
-    """apply log_in_out to each method of obj"""
-    for m in dir(obj):
-        if not m.startswith('__'):
-            meth = getattr(obj, m)
-            if callable(meth):
-                setattr(obj, m, log_in_out(meth, m))
+def setup_function(function):
+    global tmpdir  # teardown will remove it
+    tmpdir = tempfile.mkdtemp()
 
 
 def teardown_function(function):
@@ -67,25 +58,12 @@ def teardown_function(function):
         shutil.rmtree(tmpdir)
 
 
-def make_dirs():
-    """make tmpdir and 'in', 'err', and 'done' subdirs"""
-    global tmpdir  # teardown zill remove it
-    tmpdir = tempfile.mkdtemp()
-    in_path = os.path.join(tmpdir, 'in')
-    os.mkdir(in_path)
-    err_path = os.path.join(tmpdir, 'err')
-    os.mkdir(err_path)
-    done_path = os.path.join(tmpdir, 'done')
-    os.mkdir(done_path)
-    return tmpdir, in_path, err_path, done_path
-
-
 def test_main_loop():
     """test main worker loop, that is in start"""
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
     worker = ControlledWorker(in_path, err_path)
 
-    log_all(worker)
+    log_all(worker, log)
 
     with controlled_worker(worker):
         # now we just wake it
@@ -99,7 +77,7 @@ def test_main_loop():
 
 def test_run_simple():
     """test the run method isolated"""
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
     worker = SimpleWorker(in_path, err_path)
     # push a task
     task_path = os.path.join(in_path, 't1')
@@ -115,7 +93,7 @@ next=%s""" % done_path)
 
 def test_run_raiser():
     """test the run method isolated with a raise in run_action"""
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
     worker = RaiserWorker(in_path, err_path)
     # push a task
     task_path = os.path.join(in_path, 't1')
@@ -132,7 +110,7 @@ next=%s""" % done_path)
 
 def test_run_no_section():
     """test the run method isolated with a task without section"""
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
     worker = SimpleWorker(in_path, err_path)
     # push a task
     task_path = os.path.join(in_path, 't1')
@@ -149,7 +127,7 @@ next=%s""" % done_path)
 
 def _test_init_with_files():
     """test worker when file are present in start directory"""
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
     worker = SimpleWorker(in_path, err_path)
 
     # push a task
@@ -160,7 +138,7 @@ a=1
 b=some text
 next=%s""" % done_path)
 
-    log_all(worker)
+    log_all(worker, log)
 
     worker._launch_observer = lambda: None
 
@@ -173,9 +151,9 @@ next=%s""" % done_path)
 
 
 def test_observer():
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
     worker = NoRunWorker(in_path, err_path)
-    log_all(worker)
+    log_all(worker, log)
     try:
         worker._launch_observer()
         assert worker.notifier is not None
@@ -199,10 +177,10 @@ def test_observer():
 
 def test_incoming_file():
     """integration test"""
-    tmpdir, in_path, err_path, done_path = make_dirs()
+    in_path, err_path, done_path = make_dirs(tmpdir)
 
     worker = SimpleWorker(in_path, err_path)
-    log_all(worker)  # we log so we now what is done by our thread
+    log_all(worker, log)  # we log so we now what is done by our thread
 
     with controlled_worker(worker):
         # prepare a task
