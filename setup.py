@@ -9,6 +9,7 @@ install_requires = [
 
 tests_require = [
     'pytest',
+    'pycurl',
     ]
 
 setup(name='document_chain',
