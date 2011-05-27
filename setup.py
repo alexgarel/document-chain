@@ -11,7 +11,7 @@ tests_require = [
     'pytest',
     ]
 
-setup(name='document-chain',
+setup(name='document_chain',
       version=version,
       description="A simple document chain processing",
       long_description=open("README.rst").read() + "\n" +

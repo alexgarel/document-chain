@@ -12,7 +12,7 @@ def exc_die(ret, str=None):
 setattr(unoconv, 'die', exc_die)
 
 def error(level, str):
-    pass # TODO Log !
+    pass # TODO Log !
 
 setattr(unoconv, 'error', error)
 
@@ -44,5 +44,5 @@ class UnoConvWorker(BaseWorker):
         opts.append(src)
         unoconv.op = unoconv.Options(opts)
         self.converter.convert(src)
-        # remove destination file
+        # remove destination file
         os.remove(src)
