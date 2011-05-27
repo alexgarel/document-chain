@@ -2,7 +2,6 @@ from datetime import datetime
 import os
 import os.path
 import pyinotify
-import sys
 import threading
 import traceback
 from ConfigParser import RawConfigParser
@@ -22,7 +21,7 @@ class IncomingTaskHandler(pyinotify.ProcessEvent):
         with worker.task_queue_guard:
             worker.task_queue.add(event.pathname)
             worker.task_queue_signal.notify()
-        
+
 
 class BaseWorker(object):
     """Provide basic capability of managing incoming tasks"""
@@ -71,7 +70,8 @@ class BaseWorker(object):
                 self.run_action(**task)
                 self._done(task_path, task['next'])
             except:
-                self._error(task_path, "task raises : " + traceback.format_exc())
+                self._error(task_path, "task raises : " +
+                            traceback.format_exc())
         else:
             self._error(task_path, "No section for me : %s" % self.name)
 
@@ -90,7 +90,7 @@ class BaseWorker(object):
 
     def _launch_observer(self):
         """Launch incoming task observer"""
-        handler = IncomingTaskHandler(worker = self)
+        handler = IncomingTaskHandler(worker=self)
         wm = pyinotify.WatchManager()
         self.notifier = pyinotify.ThreadedNotifier(wm, handler)
         wm.add_watch(self.in_path, pyinotify.IN_MOVED_TO, rec=False)
@@ -99,7 +99,8 @@ class BaseWorker(object):
     def _error(self, task_path, msg):
         """treat task path as an error"""
         with open(task_path, 'a') as f:
-            f.write('\n# Error in %s at %s:\n#   ' % (self.name, datetime.now()))
+            f.write('\n# Error in %s at %s:\n#   ' %
+                                (self.name, datetime.now()))
             msg = msg.replace('\n', '\n#   ')
             f.write(msg)
             f.write('\n')

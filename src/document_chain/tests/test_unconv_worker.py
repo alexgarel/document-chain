@@ -1,5 +1,6 @@
 from document_chain.base import BaseWorker, controlled_worker
 import os
+import threading
 import tempfile
 from StringIO import StringIO
 import time
@@ -41,6 +42,8 @@ class RaiserWorker(BaseWorker):
         raise Exception("I'm mean")
 
 
+
+
 def log_in_out(method, name):
     """wrapper to log each time we enter or exit method"""
     def fn(*args, **kwargs):
@@ -57,7 +60,7 @@ def log_all(obj):
         if not m.startswith('__'):
             meth = getattr(obj, m)
             if callable(meth):
-                setattr(obj, m, log_in_out(meth, m))
+                setattr(obj, m , log_in_out(meth, m))
 
 
 def teardown_function(function):
@@ -69,7 +72,7 @@ def teardown_function(function):
 
 def make_dirs():
     """make tmpdir and 'in', 'err', and 'done' subdirs"""
-    global tmpdir  # teardown zill remove it
+    global tmpdir # teardown zill remove it
     tmpdir = tempfile.mkdtemp()
     in_path = os.path.join(tmpdir, 'in')
     os.mkdir(in_path)
@@ -126,8 +129,8 @@ next=%s""" % done_path)
     assert 't1' in os.listdir(err_path)
     with open(os.path.join(err_path, 't1')) as t:
         content = t.read()
-    assert "Error in raiser at" in content
-    assert "Exception: I'm mean" in content
+    assert "Error in raiser at" in content 
+    assert "Exception: I'm mean" in content 
 
 
 def test_run_no_section():
@@ -161,6 +164,7 @@ b=some text
 next=%s""" % done_path)
 
     log_all(worker)
+    import pytest;pytest.set_trace()
 
     worker._launch_observer = lambda: None
 
@@ -191,18 +195,18 @@ def test_observer():
                 os.rename(task_path, new_path)
                 # We nust be sure pyinotify have seen file before releasing
                 # the lock
-                worker.task_queue_signal.wait()  # notifier shall notify
+                worker.task_queue_signal.wait() # notifier shall notify
                 assert worker.task_queue == set([new_path])
     finally:
         worker.stop()
 
-
+    
 def test_incoming_file():
     """integration test"""
     tmpdir, in_path, err_path, done_path = make_dirs()
 
     worker = SimpleWorker(in_path, err_path)
-    log_all(worker)  # we log so we now what is done by our thread
+    log_all(worker) # we log so we now what is done by our thread
 
     with controlled_worker(worker):
         # prepare a task
@@ -216,6 +220,7 @@ next=%s""" % done_path)
         os.rename(task_path, os.path.join(in_path, 't1'))
         # wait for completion
         while not "exit method run" in log.getvalue():
-            time.sleep(0.1)
+            time.sleep(0.1)    
         assert 't1' in os.listdir(done_path)
         assert output.getvalue() == "runing with a = '1' and b = 'some text'"
+
