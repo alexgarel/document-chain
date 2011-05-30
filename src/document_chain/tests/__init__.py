@@ -6,6 +6,18 @@ __init__ provide some utility methods for tests
 
 import os
 
+## monkey patch older versions of pyinotify
+import pyinotify
+try:
+    pyinotify.IN_MOVED_TO
+except AttributeError:
+    setattr(pyinotify, 'IN_MOVED_TO', pyinotify.EventsCodes.IN_MOVED_TO)
+try:
+    pyinotify.Event.pathname
+except AttributeError:
+    pyinotify.Event.pathname = property(
+                        lambda self:os.path.join(self.path + '/' + self.name))
+
 
 def log_in_out(method, name, log):
     """wrapper to log each time we enter or exit method"""

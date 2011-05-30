@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from datetime import datetime
 import os
 import os.path
@@ -92,8 +94,8 @@ class BaseWorker(object):
         """Launch incoming task observer"""
         handler = IncomingTaskHandler(worker=self)
         wm = pyinotify.WatchManager()
-        self.notifier = pyinotify.ThreadedNotifier(wm, handler)
         wm.add_watch(self.in_path, pyinotify.IN_MOVED_TO, rec=False)
+        self.notifier = pyinotify.ThreadedNotifier(wm, handler)
         self.notifier.start()
 
     def _error(self, task_path, msg):

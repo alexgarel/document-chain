@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import os
 import shutil
@@ -6,6 +8,7 @@ import tempfile
 import threading
 
 from document_chain.http_submitter import HTTPFileSubmitter
+
 
 
 tmpdir = None  # we need to have a global tempdir to remove it after tests
@@ -73,4 +76,4 @@ def test_run_action():
         worker.run_action(url="http://localhost:8888", file_path=file_path)
         assert 'filename="test.txt"' in served.data
         assert "My text !\n" in served.data
-        assert served.headers['Content-Type'] == 'multipart/form-data'
+        assert served.headers['Content-Type'].startswith('multipart/form-data')

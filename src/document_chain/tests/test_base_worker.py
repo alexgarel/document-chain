@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os
 from StringIO import StringIO
 import shutil
@@ -125,7 +127,7 @@ next=%s""" % done_path)
     assert "No section for me : simple" in content
 
 
-def _test_init_with_files():
+def test_init_with_files():
     """test worker when file are present in start directory"""
     in_path, err_path, done_path = make_dirs(tmpdir)
     worker = SimpleWorker(in_path, err_path)
@@ -147,7 +149,7 @@ next=%s""" % done_path)
         # shall execute task at startup
         while not "exit method run" in log.getvalue():
             time.sleep(0.1)
-        assert output.getvalue() == "runing with a = '1' and b = 'some tyext'"
+        assert output.getvalue() == "runing with a = '1' and b = 'some text'"
 
 
 def test_observer():
