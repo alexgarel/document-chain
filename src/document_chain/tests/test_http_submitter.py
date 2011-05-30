@@ -10,7 +10,6 @@ import threading
 from document_chain.http_submitter import HTTPFileSubmitter
 
 
-
 tmpdir = None  # we need to have a global tempdir to remove it after tests
 log = StringIO()
 headers = None

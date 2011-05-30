@@ -16,7 +16,7 @@ try:
     pyinotify.Event.pathname
 except AttributeError:
     pyinotify.Event.pathname = property(
-                        lambda self:os.path.join(self.path + '/' + self.name))
+                        lambda self: os.path.join(self.path + '/' + self.name))
 
 
 def log_in_out(method, name, log):
@@ -47,4 +47,3 @@ def make_dirs(tmpdir):
     done_path = os.path.join(tmpdir, 'done')
     os.mkdir(done_path)
     return in_path, err_path, done_path
-
