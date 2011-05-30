@@ -24,7 +24,7 @@ def worker_from_config(worker_name, filename, section='main'):
     config_parser = SafeConfigParser()
     config_parser.read(filename)
     prefix = worker_name + '_'
-    config = dict((k[len(prefix):],v)
+    config = dict((k[len(prefix):], v)
                     for k, v in config_parser.items(section)
                     if k.startswith(prefix))
     klass_name = config_parser.get(section, worker_name)
@@ -51,6 +51,6 @@ def main(options, args):
         signal.signal(signal.SIGTERM, term_handler(worker, pid_path))
         worker.start()
         os.unlink(pid_path)
-
+k
 if __name__ == '__main__':
     main(parser.parse_args())
