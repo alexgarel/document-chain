@@ -51,6 +51,6 @@ def main(options, args):
         signal.signal(signal.SIGTERM, term_handler(worker, pid_path))
         worker.start()
         os.unlink(pid_path)
-k
+
 if __name__ == '__main__':
     main(parser.parse_args())
