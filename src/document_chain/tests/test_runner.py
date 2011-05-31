@@ -57,7 +57,6 @@ def test_runner_config():
 
 def test_runner_run():
     make_conf()
-    options, args = runner.parser.parse_args(['submitter', ])
     started = []
 
     def start_asserter(worker):
@@ -65,7 +64,7 @@ def test_runner_run():
         started.append(worker)
 
     with MonkeyedWorker(HTTPFileSubmitter, start_asserter):
-        runner.main(options, args)
+        runner.main(['submitter', ])
     assert started
     worker = started[0]
     assert worker.__class__ == HTTPFileSubmitter

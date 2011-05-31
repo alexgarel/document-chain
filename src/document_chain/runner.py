@@ -37,8 +37,11 @@ def term_handler(worker, pid_path):
         worker.stop()
     return handler
 
-
-def main(options, args):
+def main(argv=None):
+    if argv is None:
+        options, args = parser.parse_args()
+    else:
+        options, args = parser.parse_args(argv)
     for worker_name in args:
         worker = worker_from_config(worker_name, options.filename,
                                     options.section)
@@ -53,4 +56,4 @@ def main(options, args):
         os.unlink(pid_path)
 
 if __name__ == '__main__':
-    main(parser.parse_args())
+    main()

@@ -34,5 +34,7 @@ setup(name='document_chain',
       extras_require={'test': tests_require},
       entry_points="""
       # -*- Entry points: -*-
+      [console_scripts]
+      runner = runner:main
       """,
       )
