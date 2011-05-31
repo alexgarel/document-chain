@@ -76,3 +76,19 @@ def test_run_action():
         assert 'filename="test.txt"' in served.data
         assert "My text !\n" in served.data
         assert served.headers['Content-Type'].startswith('multipart/form-data')
+
+
+def test_run_action_additional_params():
+    """just test the action is working"""
+    file_path = os.path.join(tmpdir, 'test.txt')
+    with open(file_path, 'w') as f:
+        f.write("My text !\n")
+    worker = HTTPFileSubmitter(tmpdir, tmpdir)
+    with HTTPServe() as served:
+        worker.run_action(url="http://localhost:8888", file_path=file_path,
+                            param1='foo', param2='bar')
+        assert 'filename="test.txt"' in served.data
+        assert 'name="param1"' in served.data
+        assert 'foo' in served.data
+        assert 'name="param2"' in served.data
+        assert 'bar' in served.data
