@@ -1,11 +1,14 @@
 from __future__ import with_statement
 
+import base64
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import os
 import shutil
 from StringIO import StringIO
 import tempfile
 import threading
+
+import pytest
 
 from document_chain.http_submitter import HTTPFileSubmitter
 
@@ -20,10 +23,21 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         ctx_mgr = self.server.ctx_mgr
         ctx_mgr.headers = self.headers
         ctx_mgr.data = self.rfile.read(int(self.headers['Content-length']))
-        self.send_response(200, 'OK')
+        if 'authorization' in self.headers:
+            auth = base64.decodestring(self.headers['authorization']
+                                                   [len('Basic '):])
+        else:
+            auth = None
+        if 'name="do_auth"' in ctx_mgr.data and not auth == 'me:MyPass':
+            no, msg = 403, "auth please !"
+        elif 'name="do_raise"' in ctx_mgr.data:
+            no, msg = 503, "ko"
+        else:
+            no, msg = 200, 'ok'
+        self.send_response(no, 'OK')
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
-        self.wfile.write("ok")
+        self.wfile.write(msg)
 
     def do_GET(self):
         self.send_response(200, 'OK')
@@ -79,7 +93,7 @@ def test_run_action():
 
 
 def test_run_action_additional_params():
-    """just test the action is working"""
+    """just test the action is working with additional params"""
     file_path = os.path.join(tmpdir, 'test.txt')
     with open(file_path, 'w') as f:
         f.write("My text !\n")
@@ -92,3 +106,32 @@ def test_run_action_additional_params():
         assert 'foo' in served.data
         assert 'name="param2"' in served.data
         assert 'bar' in served.data
+
+
+def test_run_action_503():
+    file_path = os.path.join(tmpdir, 'test.txt')
+    with open(file_path, 'w') as f:
+        f.write("My text !\n")
+    worker = HTTPFileSubmitter(tmpdir, tmpdir)
+    with HTTPServe() as served:
+        with pytest.raises(Exception):
+            worker.run_action(url="http://localhost:8888", file_path=file_path,
+                                do_raise='yes')
+
+
+def test_auth():
+    file_path = os.path.join(tmpdir, 'test.txt')
+    with open(file_path, 'w') as f:
+        f.write("My text !\n")
+    worker = HTTPFileSubmitter(tmpdir, tmpdir)
+    with HTTPServe() as served:
+        with pytest.raises(Exception):
+            worker.run_action(url="http://localhost:8888", file_path=file_path,
+                                do_auth='yes')
+    with HTTPServe() as served:
+        with pytest.raises(Exception):
+            worker.run_action(url="http://localhost:8888", file_path=file_path,
+                                user='me', password='NotMyPass', do_auth='yes')
+    with HTTPServe() as served:
+        worker.run_action(url="http://localhost:8888", file_path=file_path,
+                        user='me', password='MyPass', do_auth='yes')

@@ -23,8 +23,13 @@ try:
             if user is not None:
                 curl.setopt(curl.USERPWD, '%s:%s' % (user, password))
             curl.setopt(curl.HTTPPOST, form)
+            # FIXME : get output and return code !
             curl.perform()
+            code = curl.getinfo(pycurl.HTTP_CODE)
             curl.close()
+            if code != 200:
+                raise Exception('Unexpected return code from server : %s' %
+                                code)
 
 except ImportError:
     pass
