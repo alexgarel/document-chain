@@ -29,10 +29,12 @@ def worker_from_config(worker_name, filename, section='main'):
                     if k.startswith(prefix))
     klass_name = config_parser.get(section, worker_name)
     klass = globals()[klass_name]
-    return klass(**config)
+    worker = klass(**config)
+    worker.name = worker_name
+    return worker
 
 
-def term_handler(worker, pid_path):
+def term_handler(worker):
     def handler(signum, frame):
         worker.stop()
     return handler
@@ -51,7 +53,8 @@ def main(argv=None):
         pid_file = open(pid_path, 'w')
         pid_file.write(str(os.getpid()))
         pid_file.close()
-        signal.signal(signal.SIGTERM, term_handler(worker, pid_path))
+        # sadly it does not work :-/
+        #~ signal.signal(signal.SIGTERM, term_handler(worker))
         worker.start()
         os.unlink(pid_path)
 
