@@ -98,7 +98,7 @@ class BaseWorker(object):
         self.notifier = pyinotify.ThreadedNotifier(wm, handler)
         self.notifier.start()
 
-    def _error(self, task_path, msg):
+    def _error(self, task_path, msg, rename=True):
         """treat task path as an error"""
         with open(task_path, 'a') as f:
             f.write('\n# Error in %s at %s:\n#   ' %
@@ -106,8 +106,16 @@ class BaseWorker(object):
             msg = msg.replace('\n', '\n#   ')
             f.write(msg)
             f.write('\n')
-        os.rename(task_path,
-                  os.path.join(self.err_path, os.path.basename(task_path)))
+        if rename:
+            try:
+                os.rename(task_path,
+                          os.path.join(self.err_path,
+                          os.path.basename(task_path)))
+            except:
+                self._error(task_path, "can't rename task after error !\n" +
+                                                        traceback.format_exc(),
+                            rename=False)
+
 
     def _done(self, task_path, next_path):
         """move to next"""
