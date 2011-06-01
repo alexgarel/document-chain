@@ -35,6 +35,6 @@ setup(name='document_chain',
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]
-      runner = runner:main
+      runner = document_chain.runner:main
       """,
       )
