@@ -1,0 +1,9 @@
+## model monit file to check open office instances
+
+# count openoffice instances
+# you must have  etc/monit/count_process.sh soffice.bin 0 ${home}/count_openoffice.txt
+# running once in a while in a cron
+check file count_openoffice 
+  with path ${home}/count_openoffice.txt
+  if changed timestamp then alert
+  every 9 cycles
