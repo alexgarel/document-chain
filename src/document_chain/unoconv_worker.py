@@ -3,6 +3,7 @@ from __future__ import with_statement
 
 We abuse a bit unoconv module by monkey patching"""
 
+import pwd
 import os
 import sys
 from StringIO import StringIO
@@ -45,12 +46,23 @@ class UnoConvWorker(BaseWorker):
 
     name = 'unoconv'
 
+    _converter_cache = None
+
     def __init__(self, *args, **kwargs):
         BaseWorker.__init__(self, *args, **kwargs)
-        op = unoconv.Options(('foo',))
-        setattr(unoconv, 'op', op)
-        # we immediatly init our convertor
-        self.converter = unoconv.Convertor()
+
+    @property
+    def converter(self):
+        """it's important to do converter init in run_action as in
+        init we may not be in daemon final user
+        """
+        if self._converter_cache is None:
+            # set correct HOME as we need right .openoffice dir
+            os.environ['HOME'] = pwd.getpwuid(os.getuid()).pw_dir
+            op = unoconv.Options(('foo',))
+            setattr(unoconv, 'op', op)
+            self._converter_cache = unoconv.Convertor()
+        return self._converter_cache
 
     def run_action(self, src, dest=None, dest_fmt=None, **kwargs):
         """Convert src to format dest_fmt, putting file at dest using

@@ -69,7 +69,7 @@ def test_runner_daemon_init():
        wd.daemon_context.open = lambda: 1  # do nothing
        wd.do_action()
        dc = wd.daemon_context
-       assert dc.stderr.name == 'submitter.log'
+       assert dc.stderr.name == tmpdir + '/submitter.log'
        assert dc.pidfile.path == tmpdir + '/submitter.pid'
        assert started
        worker = started[0]
