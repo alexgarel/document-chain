@@ -1,4 +1,5 @@
 #!/bin/bash
+umask 0007
 
 if [ $(whoami) != converter ]
 then
