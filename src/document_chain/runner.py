@@ -78,7 +78,7 @@ class WorkerDaemon(DaemonRunner):
         self.parse_args(argv)
         dc = self.daemon_context = daemon.DaemonContext(umask = 0o007,
                                           working_directory=self.wdir)
-        log = open(self.log_path, 'w+', buffering=0)
+        log = open(self.log_path, 'a+', buffering=0)
         owner = [-1, -1]
         if self.uid is not None:
             owner[0] = self.uid
