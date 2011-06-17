@@ -2,8 +2,8 @@
 
 # services running
 check process ${name}_process  with pidfile ${home}/${name}.pid
-  start program = "/usr/bin/sudo ${home}/start_${name}.sh start"
-  stop program = "/usr/bin/sudo ${home}/start_${name}.sh stop"
+  start program = "/usr/bin/sudo ${home}/ctl_${name}.sh start"
+  stop program = "/usr/bin/sudo ${home}/ctl_${name}.sh stop"
   if 3 restarts within 5 cycles then timeout
 
 # failed tasks existence
