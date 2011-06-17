@@ -2,19 +2,11 @@
 
 # services running
 check process ${name}_process  with pidfile ${home}/${name}.pid
-  start program = "/usr/bin/sudo -b -u converter -s ${home}/start_${name}.sh"
-  stop program = "/bin/kill $(/bin/cat ${home}/${name}.pid)"
+  start program = "/usr/bin/sudo ${home}/start_${name}.sh start"
+  stop program = "/usr/bin/sudo ${home}/start_${name}.sh stop"
   if 3 restarts within 5 cycles then timeout
 
 # failed tasks existence
 check directory err_${name} with path ${home}/sas/${name}/err
   if changed timestamp then alert
 
-
-# count openoffice instance
-# you must have  etc/monit/count_process.sh soffice.bin 0 toto.txt running
-# once in a while in a cron
-check file count_openoffice 
-  with path ${home}/count_openoffice.txt
-  if changed timestamp then alert
-  every 9 cycles

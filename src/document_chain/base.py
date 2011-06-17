@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import os.path
 import pyinotify
+import signal
 import threading
 import traceback
 from ConfigParser import RawConfigParser
@@ -44,22 +45,42 @@ class BaseWorker(object):
 
     def stop(self):
         self._stop_signaled = True
-        if hasattr(self, 'notifier'):
-            self.notifier.stop()
+        with self.task_queue_guard:
+            if hasattr(self, 'notifier'):
+                self.notifier.stop()
+            self.task_queue_signal.notify()  # help main worker exit
+        if hasattr(self, 'main'):
+            self.main.join()
 
-    def start(self):
+    def start(self, daemon=True):
         """start to process incoming tasks"""
         self._launch_observer()
-        self._init_task_queue()
-        tasks = self.task_queue
-        while not self._stop_signaled:
-            while tasks:
+        # note : as main_worker will pass most of its time
+        # waiting for lock it can't handle sigterm, so make it a thread
+        # we do not make it a daemon, it does important stuff
+        self.main= threading.Thread(target=self.main_work)
+        self.main.start()
+        if daemon:
+            # now we just wait for sigterm
+            signal.pause()
+        
+    def main_work(self):
+        """main worker"""
+        try:
+            self._init_task_queue()
+            tasks = self.task_queue
+            while not self._stop_signaled:
+                while tasks:
+                    with self.task_queue_guard:
+                        task_path = tasks.pop()
+                    self.run(task_path)
+                # now we wait for a new file
                 with self.task_queue_guard:
-                    task_path = tasks.pop()
-                self.run(task_path)
-            # now we wait for a new file
-            with self.task_queue_guard:
-                self.task_queue_signal.wait()
+                    self.task_queue_signal.wait()
+        except Exception:
+            if not self._stop_signaled:
+                self.stop()
+            raise
 
     def run(self, task_path):
         """read task and launch run_action"""
@@ -96,6 +117,7 @@ class BaseWorker(object):
         wm = pyinotify.WatchManager()
         wm.add_watch(self.in_path, pyinotify.IN_MOVED_TO, rec=False)
         self.notifier = pyinotify.ThreadedNotifier(wm, handler)
+        self.notifier.daemon = True
         self.notifier.start()
 
     def _error(self, task_path, msg, rename=True):
@@ -129,13 +151,11 @@ class controlled_worker(object):
 
     def __init__(self, worker):
         self.worker = worker
-        self.p = threading.Thread(target=worker.start, args=tuple())
+        self.p = threading.Thread(target=worker.start,
+                                  kwargs=dict(daemon=False))
 
     def __enter__(self):
         self.p.start()
 
     def __exit__(self, *args, **kwargs):
-        with self.worker.task_queue_guard:
-            self.worker.stop()
-            self.worker.task_queue_signal.notify()
-        self.p.join()
+        self.worker.stop()

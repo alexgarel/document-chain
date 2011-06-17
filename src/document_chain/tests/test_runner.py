@@ -6,6 +6,7 @@ import tempfile
 
 from document_chain.http_submitter import HTTPFileSubmitter
 from document_chain import runner
+from daemon import daemon
 
 
 tmpdir = None
@@ -55,17 +56,22 @@ def test_runner_config():
     assert worker.in_path == 'submitter/in'
 
 
-def test_runner_run():
+def test_runner_daemon_init():
     make_conf()
     started = []
 
-    def start_asserter(worker):
-        assert os.path.exists('%s/submitter.pid' % tmpdir)
+
+    def start_asserter(worker,  daemon=False):
         started.append(worker)
 
     with MonkeyedWorker(HTTPFileSubmitter, start_asserter):
-        runner.main(['submitter', ])
-    assert started
-    worker = started[0]
-    assert worker.__class__ == HTTPFileSubmitter
-    assert worker.in_path == 'submitter/in'
+       wd = runner.WorkerDaemon(argv=['-w', tmpdir, 'submitter', 'start'])
+       wd.daemon_context.open = lambda: 1  # do nothing
+       wd.do_action()
+       dc = wd.daemon_context
+       assert dc.stderr.name == 'submitter.log'
+       assert dc.pidfile.path == tmpdir + '/submitter.pid'
+       assert started
+       worker = started[0]
+       assert worker.__class__ == HTTPFileSubmitter
+       assert worker.in_path == 'submitter/in'
