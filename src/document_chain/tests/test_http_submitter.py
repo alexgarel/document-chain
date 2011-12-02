@@ -34,7 +34,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             no, msg = 503, "ko"
         else:
             no, msg = 200, 'ok'
-        self.send_response(no, 'OK')
+        self.send_response(no, msg)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
         self.wfile.write(msg)
