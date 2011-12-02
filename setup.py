@@ -7,11 +7,11 @@ install_requires = [
     'setuptools',
     'python-daemon',
     'pyinotify',
+    'pycurl',
     ]
 
 tests_require = [
     'pytest',
-    'pycurl',
     ]
 
 setup(name='document_chain',
