@@ -6,6 +6,7 @@ version = '0.1a1dev'
 install_requires = [
     'setuptools',
     'python-daemon',
+    'pyinotify',
     ]
 
 tests_require = [
