@@ -10,13 +10,15 @@ try:
 
         name = 'HTTP file submitter'
 
-        def run_action(self, url, file_path, user=None, password=None,
+        def run_action(self, url, file_path=None, user=None, password=None,
                        field_name='file', **kwargs):
             """Submit file to url
 
             kwargs may contain optionnal parameters to request
             """
-            form = [(field_name, (pycurl.FORM_FILE, file_path))]
+            form = []
+            if file_path is not None:
+                form.append((field_name, (pycurl.FORM_FILE, file_path)))
             form.extend((k, v) for k, v in kwargs.items() if k != 'next')
             curl = pycurl.Curl()
             curl.setopt(pycurl.URL, url)
