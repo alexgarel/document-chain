@@ -5,6 +5,7 @@ from optparse import OptionParser
 import os
 import pwd
 import signal
+import sys
 
 import daemon
 from daemon.runner import make_pidlockfile, DaemonRunner
@@ -74,6 +75,10 @@ class App(object):
 class WorkerDaemon(DaemonRunner):
 
     def __init__(self, parser=parser, argv=None):
+        # daemon use old __stdin__ semantic while multiprocessing eg. may not
+        # care about it and close stdin without replacing __stdin__
+        sys.__stdin__ = sys.stdin
+
         self.parser = parser
         self.parse_args(argv)
         dc = self.daemon_context = daemon.DaemonContext(umask = 0o007,
