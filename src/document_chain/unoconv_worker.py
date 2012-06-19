@@ -64,7 +64,8 @@ class UnoConvWorker(BaseWorker):
             self._converter_cache = unoconv.Convertor()
         return self._converter_cache
 
-    def run_action(self, src, dest=None, dest_fmt=None, **kwargs):
+    def run_action(
+        self, src, dest=None, dest_fmt=None, remove_src=False, **kwargs):
         """Convert src to format dest_fmt, putting file at dest using
         unoconv
         """
@@ -87,5 +88,11 @@ class UnoConvWorker(BaseWorker):
                     err.write('\nNote that some version of OOo needs'
                            + ' permission to access the file for user group !')
                 raise Exception(err.getvalue())
-        # remove destination file
-        os.remove(src)
+            # verify file is not empty
+            if not os.path.getsize(dest):
+                raise RuntimeError(
+                    "destination file is empty, this is a failure !")
+
+        if remove_src:
+            # remove source file
+            os.remove(src)
