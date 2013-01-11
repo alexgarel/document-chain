@@ -13,6 +13,10 @@ from daemon.runner import make_pidlockfile, DaemonRunner
 
 from document_chain.http_submitter import HTTPFileSubmitter
 from document_chain.unoconv_worker import UnoConvWorker
+try:
+    from document_chain.rml2pdf_worker import RML2PDFWorker
+except ImportError:
+    pass
 
 
 parser = OptionParser(usage="%prog [options] worker")
