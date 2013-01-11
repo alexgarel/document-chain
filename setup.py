@@ -38,5 +38,8 @@ setup(name='document_chain',
       # -*- Entry points: -*-
       [console_scripts]
       runner = document_chain.runner:main
+
+      [paste.app_factory]
+      wait_task = document_chain.wsgi_wait:WSGIWaitTask.app_factory
       """,
       )
