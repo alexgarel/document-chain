@@ -1,6 +1,10 @@
 """utility to run a worker, based on a config file parameters"""
 from ConfigParser import SafeConfigParser
 import grp
+try:
+    import importlib
+except ImportError:
+    import _importlib as importlib
 from optparse import OptionParser
 import os
 import pwd
@@ -43,6 +47,13 @@ parser.add_option("-g", "--group",
                   default=None, dest="grp")
 
 
+def load_class(fullname):
+    module, class_name = fullname.rsplit('.', 1)
+    if module not in sys.modules:
+        importlib.import_module(module)
+    return getattr(sys.modules[module], class_name)
+
+
 def worker_from_config(worker_name, filename, section='main'):
     config_parser = SafeConfigParser()
     config_parser.read(filename)
@@ -51,7 +62,11 @@ def worker_from_config(worker_name, filename, section='main'):
                     for k, v in config_parser.items(section)
                     if k.startswith(prefix))
     klass_name = config_parser.get(section, worker_name)
-    klass = globals()[klass_name]
+    # if dotted name load, else takes from globals
+    if '.' in klass_name:
+        klass = load_class(klass_name)
+    else:
+        klass = globals()[klass_name]
     worker = klass(**config)
     worker.name = worker_name
     return worker
