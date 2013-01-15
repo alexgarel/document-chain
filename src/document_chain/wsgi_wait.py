@@ -176,7 +176,7 @@ class SendFileIterator(object):
                 'Content-Type': self.content_type,
                 'Content-Length': os.stat(path).st_size,
                 'Content-Disposition':
-                    'attachement; filename=%s' % self.name}
+                    'attachment; filename=%s' % self.name}
             self.start_response('200 OK', headers.items())
             with open(path) as f:
                 data = f.read(CHUNK_SIZE)
