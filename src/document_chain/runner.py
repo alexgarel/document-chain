@@ -14,7 +14,6 @@ import sys
 import daemon
 from daemon.runner import make_pidlockfile, DaemonRunner
 
-
 from document_chain.http_submitter import HTTPFileSubmitter
 from document_chain.unoconv_worker import UnoConvWorker
 try:
@@ -30,6 +29,9 @@ parser.add_option("-c", "--config",
 parser.add_option("-s", "--section",
                   help="Use section of config file (default is main)",
                   default='main', dest="section")
+parser.add_option("--no-detach",
+                  help="Do not detach (useful for debugging)",
+                  action="store_false", dest="detach", default=True)
 parser.add_option("-p", "--pid-file",
                   help="Use this file for pid (default in <worker name>.pid)",
                   default=None, dest="pid")
@@ -100,16 +102,25 @@ class WorkerDaemon(DaemonRunner):
 
         self.parser = parser
         self.parse_args(argv)
-        dc = self.daemon_context = daemon.DaemonContext(umask = 0o007,
-                                          working_directory=self.wdir)
-        log = open(self.log_path, 'a+', buffering=0)
+        context_args = {}
+        if not self.detach_process:
+            context_args['stdin'] = sys.stdin
+            context_args['stdout'] = sys.stdout
+            context_args['stderr'] = sys.stderr
+        dc = self.daemon_context = daemon.DaemonContext(
+            umask = 0o007,
+            working_directory=self.wdir,
+            detach_process = self.detach_process,
+            **context_args)
         owner = [-1, -1]
         if self.uid is not None:
             owner[0] = self.uid
         if self.gid is not None:
             owner[1] = self.gid
-        os.chown(self.log_path, *owner)
-        dc.stderr = log
+        if self.detach_process:
+            log = open(self.log_path, 'a+', buffering=0)
+            os.chown(self.log_path, *owner)
+            dc.stderr = log
         self.pidfile = dc.pidfile = make_pidlockfile(self.pid_path, 5000)
         if self.uid is not None:
             dc.uid = self.uid 
@@ -117,6 +128,8 @@ class WorkerDaemon(DaemonRunner):
             dc.gid = self.gid 
         handler = term_handler(self)
         dc.signal_map[signal.SIGTERM] = handler
+        if not self.detach_process:
+            dc.signal_map[signal.SIGINT] = handler
 
     def parse_args(self, argv=None):
         if argv is None:
@@ -146,9 +159,12 @@ class WorkerDaemon(DaemonRunner):
             self.gid = grp.getgrnam(options.grp).gr_gid
         else:
             self.gid = None
+        self.detach_process = options.detach
+
 
 def main(argv=None):
     WorkerDaemon(parser, argv).do_action()
+
     
 if __name__ == '__main__':
     main()
