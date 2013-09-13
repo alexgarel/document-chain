@@ -1,4 +1,13 @@
 """this module define a worker to convert rml documents to pdf
+using  :py:func:`rml2pdf.go`
+
+Parameters:
+
+src
+  path to rml file
+dest
+  path to pdf file
+
 """
 import os
 
