@@ -41,7 +41,6 @@ try:
             curl.setopt(pycurl.URL, url)
             if user is not None:
                 curl.setopt(curl.USERPWD, '%s:%s' % (user, password))
-            import pdb;pdb.set_trace()
             if headers:
                 curl.setopt(pycurl.HTTPHEADER, headers)
             curl.setopt(curl.HTTPPOST, form)

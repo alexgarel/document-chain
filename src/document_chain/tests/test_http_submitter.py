@@ -50,6 +50,8 @@ class HTTPServe(object):
 
     headers = None
     data = None
+    status = None
+    msg = None
 
     def __enter__(self):
         """Launch server in a thread to serve just one request"""
@@ -135,3 +137,11 @@ def test_auth():
     with HTTPServe() as served:
         worker.run_action(url="http://localhost:8888", file_path=file_path,
                         user='me', password='MyPass', do_auth='yes')
+
+def test_http_headers():
+    worker = HTTPFileSubmitter(tmpdir, tmpdir)
+    with HTTPServe() as served:
+        worker.run_action(url="http://localhost:8888",
+                          foo='bar', 
+                          **{'@x-my-header': 'foo'})
+        assert served.headers['x-my-header'] == 'foo'
