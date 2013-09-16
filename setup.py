@@ -12,6 +12,7 @@ install_requires = [
 
 tests_require = [
     'pytest',
+    'z3c.rml',
     ]
 
 setup(name='document_chain',
