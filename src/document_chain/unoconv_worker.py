@@ -59,7 +59,7 @@ class UnoConvWorker(BaseWorker):
                 job.op.format = 'pdf'
             if dest is None:
                 dest = (os.path.splitext(src)[0] + '.' +
-                        unoconv.fmts.byname(dest_fmt)[0].extension)
+                        unoconv.fmts.byname(job.op.format)[0].extension)
             job.op.output = dest
             job.op.complete_config()
             job.converter.convert(src)

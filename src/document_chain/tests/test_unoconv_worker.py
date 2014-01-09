@@ -49,7 +49,7 @@ def test_run_action():
     shutil.copyfile(sample_path, temp_path)
     group_permissions(temp_path)
     worker = UnoConvWorker(tmpdir, tmpdir)
-    worker.run_action(src=temp_path)
+    worker.run_action(src=temp_path, remove_src=True)
     pdf_path = os.path.join(tmpdir, 'sample-text.pdf')
     assert os.path.exists(pdf_path)
     with open(pdf_path) as f:
@@ -61,7 +61,7 @@ def test_run_action():
     worker.run_action(src=temp_path, dest_fmt='doc')
     odt_path = os.path.join(tmpdir, 'sample-text.doc')
     assert os.path.exists(odt_path)
-    assert not os.path.exists(temp_path)
+    assert os.path.exists(temp_path)
 
 
 def test_run_action_with_error():
@@ -103,4 +103,3 @@ def test_integration():
         assert 't1' in os.listdir(done_path)
         pdf_path = os.path.join(tmpdir, 'sample-text.pdf')
         assert os.path.exists(pdf_path)
-        assert not os.path.exists(temp_path)
