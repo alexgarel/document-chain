@@ -18,7 +18,7 @@ setup(name='document_chain',
       version=version,
       description="A simple document chain processing",
       long_description=open("README.rst").read() + "\n" +
-                       open(os.path.join("docs", "HISTORY.txt")).read(),
+                       open(os.path.join("docs", "HISTORY.rst")).read(),
       classifiers=[
         "Programming Language :: Python",
         ],
